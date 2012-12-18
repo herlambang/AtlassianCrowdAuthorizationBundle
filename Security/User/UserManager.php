@@ -45,6 +45,14 @@ class UserManager implements UserProviderInterface
      */
     function loadUserByUsername($username)
     {
+        $session = $this->container->get('request')->getSession();
+        if($session->has('crowd_token_object')){
+            $token   = $session->get('crowd_token_object');
+            $user    = $token->getUser();
+            if($username == $user->getUsername()){
+                return $user;
+            }
+        }
         $service_response = $this->serviceProvider->retrieveUser($username);
         return $this->createUserObject($service_response);
     }
@@ -63,6 +71,14 @@ class UserManager implements UserProviderInterface
      */
     function refreshUser(UserInterface $user)
     {
+        $session = $this->container->get('request')->getSession();
+        if($session->has('crowd_token_object')){
+            $token      = $session->get('crowd_token_object');
+            $userToken  = $token->getUser();
+            if($user->getUsername() == $userToken->getUsername()){
+                return $userToken;
+            }
+        }
         $service_response = $this->serviceProvider->retrieveUser($user->getUsername());
         return $this->createUserObject($service_response);
     }
