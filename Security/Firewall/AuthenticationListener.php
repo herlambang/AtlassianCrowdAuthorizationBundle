@@ -19,7 +19,7 @@ use Symfony\Component\Security\Core\SecurityContextInterface;
 use Symfony\Component\Security\Core\Authentication\AuthenticationManagerInterface;
 use Symfony\Component\HttpKernel\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use \Duo\AtlassianCrowdAuthorizationBundle\Security\Authentication\Token;
+use Duo\AtlassianCrowdAuthorizationBundle\Security\Authentication\Token;
 
 class AuthenticationListener implements ListenerInterface
 {
@@ -62,6 +62,7 @@ class AuthenticationListener implements ListenerInterface
      */
     function handle(GetResponseEvent $event)
     {
+
         if (null !== $this->logger) {
             $this->logger->debug(sprintf('Checking secure context token: %s', $this->securityContext->getToken()));
         }
@@ -91,17 +92,13 @@ class AuthenticationListener implements ListenerInterface
         try
         {
             $returnValue = $this->authenticationManager->authenticate($token);
-
             if ($returnValue instanceof TokenInterface)
             {
-
                 if (null !== $this->logger)
                 {
                     $this->logger->info(sprintf('Authentication returned the following attributes from Crowd: %s', print_r($returnValue->getAttributes(), true)));
                 }
-
                 $this->securityContext->setToken($returnValue);
-
             } else if ($returnValue instanceof Response)
             {
                 return $event->setResponse($returnValue);
@@ -109,9 +106,11 @@ class AuthenticationListener implements ListenerInterface
         } catch (\Symfony\Component\Security\Core\Exception\AuthenticationException $e)
         {
 //            $this->securityContext->setToken(null);
-            $response = new Response();
-            $this->container->get('templating')->render('DuoAtlassianCrowdAuthorizationBundle:Default:login.html.twig', array(), $response);
-            $event->setResponse($response);
+            //$response = new Response();
+            // patch here
+            
+            $params = array('error' => 'Bad Credential');
+            $event->setResponse($this->container->get('templating')->renderResponse('DuoAtlassianCrowdAuthorizationBundle:Default:login.html.twig', $params));
                 if (null !== $this->logger)
             {
                 $this->logger->err(__METHOD__ . ' | Uma excecao inesperada ocorreu: ' . $e->getMessage());

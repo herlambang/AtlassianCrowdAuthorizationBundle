@@ -20,6 +20,8 @@ class Token extends AbstractToken
     protected $username;
     protected $password;
 
+    // patch here
+    protected $credentials;
 
     /**
      * Returns the user credentials.
@@ -29,7 +31,7 @@ class Token extends AbstractToken
     function getCredentials()
     {
         // TODO: Implement getCredentials() method.
-        return '';
+        return $this->credentials;
     }
 
     public function setCrowdToken($crowd_token)

@@ -62,7 +62,8 @@ class AuthenticationProvider implements AuthenticationProviderInterface
                 $this->logger->info(__METHOD__ . ' | Retorno do AuthenticatorProvider: ' . print_r($service_response, true));
             }
 
-            if (!$service_response['user']['active']) throw new Symfony\Component\Security\Core\Exception\AuthenticationException('User is not active.');
+            // patch here
+            if (!$service_response['user']['active']) throw new \Symfony\Component\Security\Core\Exception\AuthenticationException('User is not active.');
 
             $user = new \Duo\AtlassianCrowdAuthorizationBundle\Security\User\User();
             $user->setUsername($service_response['user']['username']);
@@ -77,6 +78,10 @@ class AuthenticationProvider implements AuthenticationProviderInterface
 
             $token->setUser($user);
             $token->setAuthenticated(true);
+
+            //patch here
+            $token->setCrowdToken($service_response['token']);
+            $token->setUsername($service_response['user']['username']);
 
         } catch (\Duo\AtlassianCrowdAuthorization\Exception\InvalidUserAuthenticationException $e)
         {
