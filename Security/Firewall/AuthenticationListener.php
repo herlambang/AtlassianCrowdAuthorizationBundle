@@ -67,9 +67,18 @@ class AuthenticationListener implements ListenerInterface
             $this->logger->debug(sprintf('Checking secure context token: %s', $this->securityContext->getToken()));
         }
 
-        $token = new Token();
-
         $session = $event->getRequest()->getSession();
+
+        // use session only, never fetch crowd after login
+        if ($session->has('crowd_token_object')){
+            $sessionToken = $session->get('crowd_token_object');
+            $sessionToken->setCrowdToken($session->get('crowd_token_key'));
+            $sessionToken->setUsername($sessionToken->getUser()->getUsername());
+            $this->securityContext->setToken($sessionToken);
+            return;
+        }
+
+        $token = new Token();
 
         if ($session->has('crowd_token_key'))
         {
@@ -101,6 +110,12 @@ class AuthenticationListener implements ListenerInterface
                 }
                 $this->securityContext->setToken($returnValue);
                 $session->set('crowd_token_key',$returnValue->getCrowdToken());
+                
+                // save crowd token to session in case just want to use session only
+                if (!$session->has('crowd_token_object')){
+                    $session->set('crowd_token_object', $returnValue );
+                }
+
             } else if ($returnValue instanceof Response)
             {
                 return $event->setResponse($returnValue);
@@ -122,7 +137,7 @@ class AuthenticationListener implements ListenerInterface
             {
                 $this->logger->err(__METHOD__ . ' : ' . $e->getMessage());
             }
-            $session->remove('crowd_token_key');
+            $session->remove('crowd_token_object');
         }
 
 //        $response = new Response();
