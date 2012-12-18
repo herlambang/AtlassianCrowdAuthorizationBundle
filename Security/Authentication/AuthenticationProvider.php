@@ -86,6 +86,10 @@ class AuthenticationProvider implements AuthenticationProviderInterface
         } catch (\Duo\AtlassianCrowdAuthorization\Exception\InvalidUserAuthenticationException $e)
         {
             throw new \Symfony\Component\Security\Core\Exception\AuthenticationException($e->getMessage());
+        }catch(\Duo\AtlassianCrowdAuthorization\Exception\InvalidSsoTokenException $e){
+            throw new \Exception("Invalid token or already expired");
+        } catch (\Exception $e){
+            throw $e;
         }
 
         return $token;

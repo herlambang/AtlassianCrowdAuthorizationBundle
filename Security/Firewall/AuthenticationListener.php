@@ -69,10 +69,11 @@ class AuthenticationListener implements ListenerInterface
 
         $token = new Token();
 
-        $cookies = $event->getRequest()->cookies;
-        if ($cookies->has('crowd_token_key'))
+        $session = $event->getRequest()->getSession();
+
+        if ($session->has('crowd_token_key'))
         {
-            $token->setCrowdToken($cookies->get('crowd_token_key'));
+            $token->setCrowdToken($session->get('crowd_token_key'));
         } else
         {
             $post_params = $event->getRequest()->request->all();
@@ -99,22 +100,29 @@ class AuthenticationListener implements ListenerInterface
                     $this->logger->info(sprintf('Authentication returned the following attributes from Crowd: %s', print_r($returnValue->getAttributes(), true)));
                 }
                 $this->securityContext->setToken($returnValue);
+                $session->set('crowd_token_key',$returnValue->getCrowdToken());
             } else if ($returnValue instanceof Response)
             {
                 return $event->setResponse($returnValue);
             }
         } catch (\Symfony\Component\Security\Core\Exception\AuthenticationException $e)
         {
-//            $this->securityContext->setToken(null);
-            //$response = new Response();
             // patch here
-            
             $params = array('error' => 'Bad Credential');
             $event->setResponse($this->container->get('templating')->renderResponse('DuoAtlassianCrowdAuthorizationBundle:Default:login.html.twig', $params));
                 if (null !== $this->logger)
             {
                 $this->logger->err(__METHOD__ . ' | Uma excecao inesperada ocorreu: ' . $e->getMessage());
             }
+        }
+        catch(\Exception $e){
+            $params = array('error' => $e->getMessage());
+            $event->setResponse($this->container->get('templating')->renderResponse('DuoAtlassianCrowdAuthorizationBundle:Default:login.html.twig', $params));
+            if (null !== $this->logger)
+            {
+                $this->logger->err(__METHOD__ . ' : ' . $e->getMessage());
+            }
+            $session->remove('crowd_token_key');
         }
 
 //        $response = new Response();
