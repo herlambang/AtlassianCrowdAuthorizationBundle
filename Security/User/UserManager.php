@@ -75,6 +75,11 @@ class UserManager implements UserProviderInterface
         if($session->has('crowd_token_object')){
             $token      = $session->get('crowd_token_object');
             $userToken  = $token->getUser();
+
+            // handle never-logout user
+            if(!$userToken){
+                return false;
+            }
             if($user->getUsername() == $userToken->getUsername()){
                 return $userToken;
             }
